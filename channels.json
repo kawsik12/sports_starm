@@ -1,0 +1,12 @@
+{
+  "channels": [
+    {
+      "name": "লাইভ চ্যানেল ১ (ইউটিউব/অফিশিয়াল)",
+      "url": "https://www.youtube.com/embed/your-video-id-1"
+    }
+  ],
+  "score": {
+    "matchTitle": "লাইভ স্কোর বোর্ড",
+    "liveDetails": "এখানে লাইভ স্কোর দেখাবে"
+  }
+}
