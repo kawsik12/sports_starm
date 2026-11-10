@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Starm - Live Match Fixtures</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #ef4444;
+            --text-color: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: var(--accent-color);
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        .search-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 25px auto;
+            display: block;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 30px;
+            border: 1px solid #334155;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            outline: none;
+        }
+        .search-box:focus {
+            border-color: var(--accent-color);
+        }
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .match-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .match-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-color);
+        }
+        .sport-tag {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .tournament-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .match-teams {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 15px;
+        }
+        .watch-btn {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .watch-btn:hover {
+            background-color: #2563eb;
+        }
+        .loading {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sports Starm</h1>
+        <p>লাইভ খেলা, টুর্নামেন্ট ও দলীয় আপডেট</p>
+    </header>
+
+    <input type="text" id="searchBox" class="search-box" placeholder="খেলার বা দলের নাম খুঁজুন (যেমন: Cricket, Football, Brazil)..." onkeyup="filterMatches()">
+
+    <div id="loading" class="loading">খেলার তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</div>
+    <div id="matchesGrid" class="matches-grid"></div>
+
+    <script>
+        let allMatches = [];
+
+        async function fetchMatches() {
+            try {
+                // Make.com ও স্ট্রিম সোর্স থেকে ডেটা ফেচ করা
+                let response = await fetch('https://iptv-org.github.io/api/streams.json');
+                let data = await response.json();
+                
+                // ডেটা ফিল্টার করে প্রয়োজনীয় ম্যাচ বা ইভেন্ট ফরম্যাটে রূপান্তর
+                allMatches = data
+                    .filter(item => item.channel && item.title)
+                    .map(item => {
+                        let titleLower = item.title.toLowerCase();
+                        let sport = "অন্যান্য খেলা";
+                        if(titleLower.includes('cricket') || titleLower.includes('IPL') || titleLower.includes('t20')) sport = "ক্রিকেট";
+                        else if(titleLower.includes('football') || titleLower.includes('soccer') || titleLower.includes('fifa')) sport = "ফুটবল";
+                        else if(titleLower.includes('sports')) sport = "লাইভ স্পোর্টস";
+
+                        return {
+                            sport: sport,
+                            tournament: item.broadcast_area ? item.broadcast_area.join(', ') : "আন্তর্জাতিক টুর্নামেন্ট",
+                            teams: item.title,
+                            url: item.url || '#'
+                        };
+                    });
+
+                displayMatches(allMatches);
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 'তথ্য লোড করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।';
+            }
+        }
+
+        function displayMatches(matches) {
+            const grid = document.getElementById('matchesGrid');
+            grid.innerHTML = '';
+
+            if (matches.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#94a3b8;">কোনো খেলা পাওয়া যায়নি।</p>';
+                return;
+            }
+
+            // প্রথম ১০০টি লাইভ ম্যাচ প্রদর্শন করা হচ্ছে
+            matches.slice(0, 100).forEach(match => {
+                let card = document.createElement('div');
+                card.className = 'match-card';
+                card.innerHTML = `
+                    <span class="sport-tag">${match.sport}</span>
+                    <div class="tournament-name">${match.tournament}</div>
+                    <div class="match-teams">${match.teams}</div>
+                    <a href="${match.url}" target="_blank" class="watch-btn">লাইভ দেখুন</a>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterMatches() {
+            let query = document.getElementById('searchBox').value.toLowerCase();
+            let filtered = allMatches.filter(m => 
+                m.teams.toLowerCase().includes(query) || 
+                m.tournament.toLowerCase().includes(query) || 
+                m.sport.toLowerCase().includes(query)
+            );
+            displayMatches(filtered);
+        }
+
+        fetchMatches();
+    </script>
+</body>
+  </html>
+  
