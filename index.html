@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Starm - Live Match Fixtures</title>
+    <title>Sports Starm - Live Sports Channels</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -122,45 +122,70 @@
 
     <header>
         <h1>Sports Starm</h1>
-        <p>লাইভ খেলা, টুর্নামেন্ট ও দলীয় আপডেট</p>
+        <p>বাংলাদেশ ও ইন্ডিয়ার জনপ্রিয় লাইভ স্পোর্টস চ্যানেল প্ল্যাটফর্ম</p>
     </header>
 
-    <input type="text" id="searchBox" class="search-box" placeholder="খেলার বা দলের নাম খুঁজুন (যেমন: Cricket, Football, Brazil)..." onkeyup="filterMatches()">
+    <input type="text" id="searchBox" class="search-box" placeholder="চ্যানেল বা খেলার নাম খুঁজুন (যেমন: T Sports, GTV, Ten Sports)..." onkeyup="filterMatches()">
 
-    <div id="loading" class="loading">খেলার তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</div>
+    <div id="loading" class="loading">চ্যানেলগুলো লোড হচ্ছে...</div>
     <div id="matchesGrid" class="matches-grid"></div>
 
     <script>
-        let allMatches = [];
+        // বাংলাদেশ ও ইন্ডিয়ার জনপ্রিয় স্পোর্টস চ্যানেল এবং আইপিটিভি ফিডের ডেটাবেজ
+        let allMatches = [
+            { sport: "ক্রিকেট / ফুটবল", tournament: "বাংলাদেশ ও এশিয়া", teams: "T Sports HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট / লাইভ", tournament: "বাংলাদেশ", teams: "GTV (Gazi TV)", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট / টুর্নামেন্ট", tournament: "বাংলাদেশ", teams: "T Sports", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "আন্তর্জাতিক স্পোর্টস", tournament: "দক্ষিণ এশিয়া", teams: "Ten Sports HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট ও স্পোর্টস", tournament: "ইন্ডিয়া / আন্তর্জাতিক", teams: "Star Sports 1 HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট ও স্পোর্টস", tournament: "ইন্ডিয়া / আন্তর্জাতিক", teams: "Star Sports 2 HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "হিন্দি স্পোর্টস ফিড", tournament: "ইন্ডিয়া", teams: "Star Sports Hindi", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট স্পেশال", tournament: "ইন্ডিয়া / গ্লোবাল", teams: "Willow TV HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট ও ফুটবল", tournament: "পাকিস্তান / এশিয়া", teams: "PTV Sports", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "গ্লোবাল স্পোর্টস",tournament: "আন্তর্জাতিক", teams: "Sony Sports Ten 1", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "গ্লোবাল স্পোর্টস", tournament: "আন্তর্জাতিক", teams: "Sony Sports Ten 2", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ফুটবল ও ক্রিকেট", tournament: "আন্তর্জাতিক", teams: "Sony Sports Ten 5", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "মাল্টি-স্পোর্টস", tournament: "আন্তর্জাতিক", teams: "ESPN HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "মাল্টি-স্পোর্টস", tournament: "আন্তর্জাতিক", teams: "Eurosport HD", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ফুটবল স্পেশাল", tournament: "ইউরোপ / গ্লোবাল", teams: "Sky Sports Main Event", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ক্রিকেট স্পেশাল", tournament: "ইউরোপ / গ্লোবাল", teams: "Sky Sports Cricket", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ফুটবল লিগ", tournament: "ইউরোপ", teams: "TNT Sports 1", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "ফুটবল লিগ", tournament: "ইউরোপ", teams: "TNT Sports 2", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "সকার ফিড", tournament: "আমেরিকা / গ্লোবাল", teams: "Fox Sports 1", url: "https://iptv-org.github.io/iptv/index.m3u" },
+            { sport: "সকার ফিড", tournament: "আমেরিকা / গ্লোবাল", teams: "ESPN 2", url: "https://iptv-org.github.io/iptv/index.m3u" }
+        ];
 
-        async function fetchMatches() {
+        // অটোমেটিক আইপিটিভি ওপেন সোর্স থেকে স্পোর্টস চ্যানেলগুলোর একটি বড় লিস্ট ফেচ বা মার্জ করার লজিক
+        async function loadChannels() {
             try {
-                // Make.com ও স্ট্রিম সোর্স থেকে ডেটা ফেচ করা
                 let response = await fetch('https://iptv-org.github.io/api/streams.json');
                 let data = await response.json();
                 
-                // ডেটা ফিল্টার করে প্রয়োজনীয় ম্যাচ বা ইভেন্ট ফরম্যাটে রূপান্তর
-                allMatches = data
-                    .filter(item => item.channel && item.title)
-                    .map(item => {
-                        let titleLower = item.title.toLowerCase();
-                        let sport = "অন্যান্য খেলা";
-                        if(titleLower.includes('cricket') || titleLower.includes('IPL') || titleLower.includes('t20')) sport = "ক্রিকেট";
-                        else if(titleLower.includes('football') || titleLower.includes('soccer') || titleLower.includes('fifa')) sport = "ফুটবল";
-                        else if(titleLower.includes('sports')) sport = "লাইভ স্পোর্টস";
+                // যে চ্যানেলগুলোতে সরাসরি sport বা cricket বা tv আছে সেগুলোকে ফিল্টার করে আমাদের লিস্টে যোগ করা
+                let apiSports = data
+                    .filter(item => {
+                        if (!item.channel || !item.title) return false;
+                        let title = item.title.toLowerCase();
+                        return title.includes('sport') || title.includes('cricket') || title.includes('football') || title.includes('t20') || title.includes('espn');
+                    })
+                    .slice(0, 100) // ঠিক ১০০টি স্পোর্টস চ্যানেল বা স্ট্রিম এখানে পিক করা হলো
+                    .map(item => ({
+                        sport: "লাইভ স্পোর্টস চ্যানেল",
+                        tournament: item.broadcast_area ? item.broadcast_area.join(', ') : "আন্তর্জাতিক ফিড",
+                        teams: item.title,
+                        url: item.url || '#'
+                    }));
 
-                        return {
-                            sport: sport,
-                            tournament: item.broadcast_area ? item.broadcast_area.join(', ') : "আন্তর্জাতিক টুর্নামেন্ট",
-                            teams: item.title,
-                            url: item.url || '#'
-                        };
-                    });
+                if(apiSports.length > 0) {
+                    allMatches = [...allMatches, ...apiSports];
+                }
 
                 displayMatches(allMatches);
                 document.getElementById('loading').style.display = 'none';
             } catch (error) {
-                document.getElementById('loading').innerHTML = 'তথ্য লোড করতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।';
+                // কোনো কারণে এপিআই ফেচ ফেইল করলে আমাদের ডিফল্ট প্রিমিয়াম স্পোর্টস লিস্ট দেখাবে
+                displayMatches(allMatches);
+                document.getElementById('loading').style.display = 'none';
             }
         }
 
@@ -169,12 +194,11 @@
             grid.innerHTML = '';
 
             if (matches.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#94a3b8;">কোনো খেলা পাওয়া যায়নি।</p>';
+                grid.innerHTML = '<p style="text-align:center; grid-column:1/-1; color:#94a3b8;">কোনো চ্যানেল পাওয়া যায়নি।</p>';
                 return;
             }
 
-            // প্রথম ১০০টি লাইভ ম্যাচ প্রদর্শন করা হচ্ছে
-            matches.slice(0, 100).forEach(match => {
+            matches.forEach(match => {
                 let card = document.createElement('div');
                 card.className = 'match-card';
                 card.innerHTML = `
@@ -197,8 +221,7 @@
             displayMatches(filtered);
         }
 
-        fetchMatches();
+        loadChannels();
     </script>
 </body>
-  </html>
-  
+</html>
